@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ice_Age_Operation - Ingame</title>
+  <link rel="stylesheet" href="./ingame.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">❄️</div>
+        <div class="title">
+          <h1>작전 진행</h1>
+          <p id="stageCode">STAGE</p>
+        </div>
+      </div>
+      <div class="actionsRow">
+        <a class="btn ghost" href="../index.html">메뉴로</a>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <h2 id="stageTitle">작전 불러오는 중...</h2>
+        <p class="muted" id="stageDesc"></p>
+        <div class="missionCard">
+          <h3>목표</h3>
+          <ul id="stageObjectives"></ul>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>상태</h2>
+        <div class="log" id="stageLog">스테이지 데이터를 불러오는 중...</div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./ingame.js"></script>
+</body>
+</html>

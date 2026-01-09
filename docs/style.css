@@ -1,0 +1,306 @@
+:root{
+  --bg:#0b1220;
+  --card:#111b2e;
+  --card2:#0f1728;
+  --text:#e9f0ff;
+  --muted:#a7b3cc;
+  --line:rgba(255,255,255,.10);
+  --btn:#2b69ff;
+  --btn2:#1a2b52;
+  --ok:#22c55e;
+  --warn:#f59e0b;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 700px at 20% 0%, rgba(43,105,255,.25), transparent 60%),
+    radial-gradient(900px 600px at 80% 10%, rgba(34,197,94,.12), transparent 55%),
+    linear-gradient(180deg, #060b15, var(--bg));
+  min-height:100vh;
+}
+
+#app{max-width:1100px; margin:0 auto; padding:22px;}
+.topbar{
+  display:flex; gap:18px; justify-content:space-between; align-items:flex-start;
+  padding:18px; border:1px solid var(--line); border-radius:18px;
+  background:rgba(17,27,46,.65); backdrop-filter: blur(10px);
+}
+.brand{display:flex; gap:12px; align-items:center}
+.logo{font-size:34px}
+.title h1{margin:0; letter-spacing:.06em; font-size:22px}
+.title p{margin:4px 0 0; color:var(--muted); font-size:13px}
+
+.status{display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end}
+.pill{
+  border:1px solid var(--line);
+  background:rgba(15,23,40,.7);
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.grid{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap:14px;
+}
+
+.card{
+  border:1px solid var(--line);
+  background:rgba(17,27,46,.55);
+  border-radius:18px;
+  padding:16px;
+  backdrop-filter: blur(10px);
+}
+.card h2{margin:0 0 12px; font-size:18px}
+.bullets{margin:0; padding-left:18px; color:var(--muted); line-height:1.7}
+.hint{
+  margin-top:12px;
+  padding:10px 12px;
+  border:1px dashed rgba(255,255,255,.18);
+  border-radius:14px;
+  background:rgba(15,23,40,.65);
+  color:var(--muted);
+  font-size:13px;
+}
+
+.tabs{display:flex; gap:8px; margin-bottom:12px}
+.tab{
+  flex:1;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(15,23,40,.65);
+  color:var(--muted);
+  cursor:pointer;
+  font-weight:700;
+}
+.tab.active{
+  background:rgba(43,105,255,.18);
+  color:var(--text);
+  border-color:rgba(43,105,255,.35);
+}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.field{display:flex; flex-direction:column; gap:6px; margin:10px 0}
+label{font-size:13px; color:var(--muted)}
+input, textarea{
+  width:100%;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(15,23,40,.75);
+  color:var(--text);
+  padding:10px 12px;
+  outline:none;
+}
+textarea{resize:vertical}
+small{color:var(--muted); font-size:12px; line-height:1.4}
+
+.actionsRow{display:flex; gap:10px; margin-top:10px; flex-wrap:wrap}
+.btn{
+  border:1px solid rgba(43,105,255,.35);
+  background:rgba(43,105,255,.18);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:14px;
+  cursor:pointer;
+  font-weight:800;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+
+.btn.ghost{
+  border:1px solid var(--line);
+  background:rgba(15,23,40,.65);
+  color:var(--muted);
+}
+
+.log{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(15,23,40,.6);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+  min-height:54px;
+  white-space:pre-wrap;
+}
+
+.modal{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex; align-items:center; justify-content:center;
+  padding:18px;
+}
+.modalCard{
+  width:min(720px, 100%);
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:rgba(17,27,46,.92);
+  padding:16px;
+}
+.modalCard h3{margin:0 0 10px}
+.modalCard ol{margin:0; padding-left:18px; color:var(--muted); line-height:1.7}
+.small{color:var(--muted); font-size:12px}
+
+/* ===== Lobby ===== */
+.lobby{margin-top:14px;}
+.lobbyTop{display:flex; gap:12px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;}
+.muted{color:var(--muted);}
+.lobbyGrid{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+.card.inner{
+  background:rgba(15,23,40,.55);
+  border-radius:16px;
+}
+.card.inner h3{margin:0 0 10px; font-size:16px}
+
+.slots{display:flex; flex-direction:column; gap:10px; margin-top:10px;}
+.slots{
+  max-height:260px;
+  overflow-y:auto;
+  padding-right:6px;
+}
+.slots.slim{max-height:220px;}
+.slot{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(11,18,32,.55);
+}
+.slotLeft{display:flex; flex-direction:column; gap:2px;}
+.slotName{font-weight:800;}
+.slotMeta{font-size:12px; color:var(--muted);}
+.badge{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  font-size:12px;
+  color:var(--muted);
+  background:rgba(15,23,40,.65);
+}
+.badge.ok{border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.12); color:var(--text);}
+.badge.wait{border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.12); color:var(--text);}
+.badge.host{border-color:rgba(43,105,255,.35); background:rgba(43,105,255,.12); color:var(--text);}
+
+.missionCard{
+  margin-top:10px;
+  padding:12px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:rgba(11,18,32,.55);
+  color:var(--muted);
+  line-height:1.6;
+}
+
+.row2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.roleGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.roleCard{
+  text-align:left;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(15,23,40,.65);
+  color:var(--muted);
+  padding:10px 12px;
+  cursor:pointer;
+}
+.roleCard.active{
+  border-color:rgba(43,105,255,.35);
+  background:rgba(43,105,255,.18);
+  color:var(--text);
+}
+.roleTitle{display:block; font-weight:800; margin-bottom:4px;}
+.roleDesc{display:block; font-size:12px; color:var(--muted);}
+.equipRow{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.offerList{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:10px;
+  max-height:260px;
+  overflow-y:auto;
+  padding-right:6px;
+}
+.offerItem{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px;
+  background:rgba(11,18,32,.55);
+}
+.offerRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+.offerTitle{font-weight:800; font-size:13px;}
+.check{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:6px 10px;
+  background:rgba(11,18,32,.55);
+  color:var(--muted);
+  font-size:12px;
+}
+.check input{accent-color:#2b69ff;}
+.tag{
+  display:inline-block;
+  margin-bottom:6px;
+  font-size:12px;
+  color:var(--muted);
+}
+select{
+  width:100%;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(15,23,40,.75);
+  color:var(--text);
+  padding:10px 12px;
+  outline:none;
+}
+
+/* ✅ hidden 속성일 때는 무조건 숨기기 */
+.modal[hidden] { display: none !important; }
+
+.modal { z-index: 9999; }
+.modalCard { position: relative; z-index: 10000; }
+
+/* ✅ hidden 속성일 때 모달 숨김 강제 (닫기 버튼 안 먹는 문제 해결) */
+.modal[hidden] { display: none !important; }
+.modal { z-index: 9999; }
+
+/* ✅ 로비 최소 스타일 */
+.lobby{margin-top:14px;}
+.lobbyTop{display:flex; gap:12px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;}
+.muted{color:var(--muted);}

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ice_Age_Operation</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">❄️</div>
+        <div class="title">
+          <h1>Ice_Age_Operation</h1>
+          <p>빙하기 미지행성 · 시설 복구 작전 · 협동 탑다운 슈팅</p>
+        </div>
+      </div>
+
+      <div class="status">
+        <div class="pill" id="netPill">🔌 오프라인</div>
+        <div class="pill" id="rolePill">👤 역할: -</div>
+        <div class="pill" id="roomPill">🏷️ 룸: -</div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- LEFT -->
+      <section class="card">
+        <h2>작전 브리핑</h2>
+        <ul class="bullets">
+          <li><b>최대 5명</b> 협동 P2P 온라인</li>
+          <li>스테이지마다 <b>미션 수행</b> 후 <b>탈출</b></li>
+          <li>미션 중 <b>몰려오는 괴물 방어</b> (웨이브/돌발)</li>
+          <li>발전기/통신기/정화기 등 선발대 시설을 <b>가동</b></li>
+        </ul>
+
+        <div class="hint">
+          💡 지금은 <b>Offer/Answer 복붙</b> 방식으로 연결해. (서버 없이 P2P 연결)
+        </div>
+
+        <div class="field">
+          <label>솔로 스테이지</label>
+          <select id="soloStage">
+            <option value="GEN-01">GEN-01: 발전기 가동</option>
+            <option value="COM-02">COM-02: 통신기 복구</option>
+            <option value="PUR-03">PUR-03: 정화기 재가동</option>
+            <option value="RES-04">RES-04: 선발대 구조</option>
+          </select>
+        </div>
+
+        <div class="actionsRow">
+          <button class="btn ghost" id="btnHow">연결 방법</button>
+          <button class="btn" id="btnStartLocal">로컬 테스트(싱글)</button>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <section class="card">
+        <h2>온라인 접속</h2>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="host">호스트</button>
+          <button class="tab" data-tab="join">연결</button>
+        </div>
+
+        <!-- HOST -->
+        <div class="panel active" id="panel-host">
+          <div class="field">
+            <label>닉네임</label>
+            <input id="hostName" type="text" placeholder="예: Alpha-1" maxlength="16" />
+          </div>
+
+          <div class="actionsRow">
+            <button class="btn" id="btnCreateRoom">방 만들기</button>
+            <button class="btn ghost" id="btnCopyOffer" disabled>Offer 복사</button>
+          </div>
+
+          <div class="field">
+            <label>호스트 Offer (복사해서 참가자에게 보내기)</label>
+            <textarea id="hostOffer" rows="7" readonly placeholder="방 만들기 누르면 생성됨"></textarea>
+          </div>
+
+          <div class="field">
+            <label>참가자 Answer (상대가 보낸 Answer를 여기에 붙여넣기)</label>
+            <textarea id="hostAnswerIn" rows="7" placeholder="여기에 Answer JSON 붙여넣기"></textarea>
+          </div>
+
+          <div class="actionsRow">
+            <button class="btn" id="btnApplyAnswer" disabled>Answer 적용</button>
+            <button class="btn ghost" id="btnHostToLobby" disabled>로비로 이동</button>
+          </div>
+
+          <div class="log" id="hostLog"></div>
+        </div>
+
+        <!-- JOIN -->
+        <div class="panel" id="panel-join">
+          <div class="field">
+            <label>닉네임</label>
+            <input id="joinName" type="text" placeholder="예: Bravo-2" maxlength="16" />
+          </div>
+
+          <div class="field">
+            <label>호스트 Offer (호스트가 준 Offer JSON 붙여넣기)</label>
+            <textarea id="joinOfferIn" rows="7" placeholder="여기에 Offer JSON 붙여넣기"></textarea>
+          </div>
+
+          <div class="actionsRow">
+            <button class="btn" id="btnCreateAnswer">Answer 만들기</button>
+            <button class="btn ghost" id="btnCopyAnswer" disabled>Answer 복사</button>
+          </div>
+
+          <div class="field">
+            <label>내 Answer (복사해서 호스트에게 보내기)</label>
+            <textarea id="joinAnswerOut" rows="7" readonly placeholder="Answer 만들기 누르면 생성됨"></textarea>
+          </div>
+
+          <div class="actionsRow">
+            <button class="btn" id="btnJoinToLobby" disabled>로비로 이동</button>
+          </div>
+
+          <div class="log" id="joinLog"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ✅ 로비(연결 확인용 데모) -->
+    <section class="card lobby" id="lobby" hidden>
+      <div class="lobbyTop">
+        <div>
+          <h2>로비</h2>
+          <p class="muted">미션 선택, 준비 상태, 장비/역할을 설정하고 시작해줘.</p>
+        </div>
+
+        <div class="actionsRow">
+          <button class="btn ghost" id="btnBackToMenu">메뉴로</button>
+          <button class="btn ghost" id="btnPing">PING 보내기</button>
+          <button class="btn" id="btnReadyToggle">준비</button>
+          <button class="btn" id="btnStartGame" disabled>시작</button>
+        </div>
+      </div>
+
+      <div class="lobbyGrid">
+        <div class="card inner">
+          <h3>미션 선택</h3>
+          <div class="field">
+            <label>작전</label>
+            <select id="missionSelect">
+              <option value="GEN-01">GEN-01: 발전기 가동</option>
+              <option value="COM-02">COM-02: 통신기 복구</option>
+              <option value="PUR-03">PUR-03: 정화기 재가동</option>
+              <option value="RES-04">RES-04: 선발대 구조</option>
+            </select>
+          </div>
+          <div class="missionCard" id="missionDesc">
+            발전기를 단계별로 가동하고 방어 라인을 유지해야 한다.
+          </div>
+        </div>
+
+        <div class="card inner">
+          <h3>준비 상태</h3>
+          <div class="slots" id="playerList"></div>
+          <div class="hint small">
+            ※ 1:1 데모: 내/상대 상태 표시. (동기화 확장은 다음 단계)
+          </div>
+        </div>
+
+        <div class="card inner" id="hostMultiCard">
+          <h3>추가 참가자 연결 (HOST)</h3>
+          <div class="actionsRow">
+            <button class="btn" id="btnNewOffer">새 Offer 만들기</button>
+          </div>
+          <div class="offerList" id="offerList"></div>
+          <div class="hint small">
+            ※ 각 Offer마다 Answer를 붙여넣어 연결해줘.
+          </div>
+        </div>
+
+        <div class="card inner">
+          <h3>역할 선택</h3>
+          <div class="roleGrid" id="roleGrid">
+            <button class="roleCard active" data-role="Assault">
+              <span class="roleTitle">Assault</span>
+              <span class="roleDesc">화력 중심, 기본 탄약 보너스</span>
+            </button>
+            <button class="roleCard" data-role="Engineer">
+              <span class="roleTitle">Engineer</span>
+              <span class="roleDesc">시설 수리 속도 증가</span>
+            </button>
+            <button class="roleCard" data-role="Medic">
+              <span class="roleTitle">Medic</span>
+              <span class="roleDesc">회복 아이템 효율 증가</span>
+            </button>
+            <button class="roleCard" data-role="Scout">
+              <span class="roleTitle">Scout</span>
+              <span class="roleDesc">이동 속도, 탐지 보너스</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card inner">
+          <h3>장비 선택</h3>
+          <div class="row2">
+            <div class="field">
+              <label>주무기</label>
+              <select id="weaponSelect">
+                <option value="rifle">AR-7 라이플</option>
+                <option value="shotgun">SG-4 샷건</option>
+                <option value="smg">SM-9 SMG</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>보조 장비</label>
+              <select id="gadgetSelect">
+                <option value="turret">소형 터렛</option>
+                <option value="shield">방호막 발생기</option>
+                <option value="flare">열 신호 플레어</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>특수 장비</label>
+            <div class="equipRow">
+              <label class="check">
+                <input type="checkbox" value="medkit" checked />
+                <span>메드킷</span>
+              </label>
+              <label class="check">
+                <input type="checkbox" value="ammo" />
+                <span>탄약 팩</span>
+              </label>
+              <label class="check">
+                <input type="checkbox" value="scanner" />
+                <span>스캐너</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="log" id="lobbyLog"></div>
+    </section>
+
+
+    <!-- 모달 -->
+    <div class="modal" id="modal" hidden>
+      <div class="modalCard">
+        <h3>연결 방법 (임시: 복붙 시그널링)</h3>
+        <ol>
+          <li>호스트 탭에서 <b>방 만들기</b> → Offer 생성</li>
+          <li>호스트가 Offer를 참가자에게 전달</li>
+          <li>참가자는 연결 탭에서 Offer 붙여넣고 <b>Answer 만들기</b></li>
+          <li>참가자가 Answer를 호스트에게 전달</li>
+          <li>호스트가 Answer 붙여넣고 <b>Answer 적용</b></li>
+          <li>연결 성공하면 <b>로비로 이동</b></li>
+        </ol>
+        <p class="small">
+          ※ 실제 서비스에서는 WebSocket 시그널링 서버를 두고 룸 코드로 자동 매칭하는 방식으로 바꾸면 돼.
+        </p>
+        <div class="actionsRow">
+          <button class="btn" id="btnCloseModal">닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./mainMenu.js"></script>
+</body>
+</html>
