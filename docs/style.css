@@ -233,6 +233,13 @@ small{color:var(--muted); font-size:12px; line-height:1.4}
   color:var(--text);
 }
 .roleTitle{display:block; font-weight:800; margin-bottom:4px;}
+.roleSkill{
+  display:inline-block;
+  margin-left:8px;
+  font-size:12px;
+  color:var(--muted);
+  font-weight:600;
+}
 .roleDesc{display:block; font-size:12px; color:var(--muted);}
 .equipRow{
   display:flex;

@@ -10,6 +10,23 @@ const netPill = document.getElementById("netPill");
 const rolePill = document.getElementById("rolePill");
 const roomPill = document.getElementById("roomPill");
 
+const ingameChannel = new BroadcastChannel("iao_ingame");
+const remotePositions = new Map();
+
+ingameChannel.onmessage = (ev) => {
+  const msg = ev.data;
+  if (!msg || typeof msg !== "object") return;
+  if (msg.type === "local_pos") {
+    if (role === "solo") return;
+    const payload = { type: "pos", payload: msg.payload };
+    broadcastToPeers(payload);
+  }
+  if (msg.type === "ingame_ready") {
+    const peers = Array.from(remotePositions.values());
+    ingameChannel.postMessage({ type: "remote_positions", payload: peers });
+  }
+};
+
 const tabs = Array.from(document.querySelectorAll(".tab"));
 const panelHost = document.getElementById("panel-host");
 const panelJoin = document.getElementById("panel-join");
@@ -19,10 +36,22 @@ document.getElementById("btnHow").addEventListener("click", () => (modal.hidden 
 document.getElementById("btnCloseModal").addEventListener("click", () => (modal.hidden = true));
 modal.addEventListener("click", (e) => { if (e.target === modal) modal.hidden = true; });
 
-const soloStage = document.getElementById("soloStage");
+const soloStage = "GEN-01";
 document.getElementById("btnStartLocal").addEventListener("click", () => {
-  const stage = soloStage?.value || "GEN-01";
-  window.location.href = `ingame/index.html?stage=${encodeURIComponent(stage)}&mode=solo`;
+  const stage = soloStage;
+  role = "solo";
+  cleanupConnection();
+  cleanupHostConnections();
+  setPills({
+    net: "🧊 솔로 준비중",
+    roleText: "👤 역할: Solo",
+    room: "🏷️ 룸: -",
+  });
+  if (missionSelect) {
+    missionSelect.value = stage;
+    if (missionDesc) missionDesc.textContent = MISSION_INFO[stage] || "";
+  }
+  enterLobby();
 });
 
 // ===== 상태 =====
@@ -38,6 +67,7 @@ let offerSeq = 1;
 let remotePeers = [];
 
 const localClientId = Math.random().toString(36).slice(2, 10);
+sessionStorage.setItem("iaoClientId", localClientId);
 const hostConnections = new Map();
 
 const MISSION_INFO = {
@@ -46,6 +76,44 @@ const MISSION_INFO = {
   "PUR-03": "정화기를 재가동해 오염 구역을 정리해야 한다.",
   "RES-04": "선발대 구조를 위해 안전 지점을 확보해야 한다.",
 };
+
+const ZONE_MISSIONS = {
+  A: [
+    { id: "A0", name: "발전기 수리", stageKey: "GEN-01" },
+    { id: "A1", name: "통신장비 수리", stageKey: "COM-02" },
+  ],
+};
+
+function buildZoneOptions(selectEl) {
+  if (!selectEl) return;
+  selectEl.innerHTML = "";
+  const zones = [
+    "A","B","C","D","E","F","G","H","I","J","K","L","M",
+    "N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+  ];
+  zones.forEach((z) => {
+    const opt = document.createElement("option");
+    opt.value = z;
+    opt.textContent = z === "A" ? "A 구역 (오픈)" : `${z} 구역 (잠김)`;
+    if (z !== "A") opt.disabled = true;
+    selectEl.appendChild(opt);
+  });
+  selectEl.value = "A";
+}
+
+function buildMissionOptions(selectEl, zoneKey) {
+  if (!selectEl) return;
+  const list = ZONE_MISSIONS[zoneKey] || [];
+  selectEl.innerHTML = "";
+  list.forEach((m) => {
+    const opt = document.createElement("option");
+    opt.value = m.stageKey;
+    opt.textContent = `${m.id}: ${m.name}`;
+    selectEl.appendChild(opt);
+  });
+  if (list.length > 0) selectEl.value = list[0].stageKey;
+}
+
 
 // WebRTC 설정(기본 STUN 서버)
 const RTC_CONFIG = {
@@ -174,6 +242,14 @@ function bindDataChannel(channel, logEl, connId = null) {
   channel.onerror = (e) => logTo(logEl, `데이터 채널 error: ${String(e)}`);
   channel.onmessage = (ev) => {
     const obj = safeJsonParse(ev.data);
+    if (obj?.type === "pos") {
+      if (obj.payload?.id) remotePositions.set(obj.payload.id, obj.payload);
+      ingameChannel.postMessage({
+        type: "remote_positions",
+        payload: Array.from(remotePositions.values()),
+      });
+      return;
+    }
     if (obj?.type === "lobby_state") {
       if (role === "host") {
         if (obj.payload?.id) peerStates.set(obj.payload.id, obj.payload);
@@ -314,6 +390,7 @@ const lobbyLog = document.getElementById("lobbyLog");
 const btnBackToMenu = document.getElementById("btnBackToMenu");
 const btnPing = document.getElementById("btnPing");
 const btnReadyToggle = document.getElementById("btnReadyToggle");
+const zoneSelect = document.getElementById("zoneSelect");
 const missionSelect = document.getElementById("missionSelect");
 const missionDesc = document.getElementById("missionDesc");
 const roleGrid = document.getElementById("roleGrid");
@@ -390,14 +467,19 @@ function enterLobby() {
   renderPlayerList();
   sendLobbyState();
 
-  if (missionSelect) missionSelect.disabled = role !== "host";
+  if (zoneSelect) zoneSelect.disabled = !(role === "host" || role === "solo");
+  if (missionSelect) missionSelect.disabled = !(role === "host" || role === "solo");
   if (hostMultiCard) hostMultiCard.hidden = role !== "host";
-  if (btnStartGame) btnStartGame.hidden = role !== "host";
+  if (btnStartGame) btnStartGame.hidden = role !== "host" && role !== "solo";
   if (role === "host") syncHostOfferList();
   updateStartButtonState();
 
   if (btnPing) {
     btnPing.onclick = () => {
+      if (role === "solo") {
+        logTo(lobbyLog, "📤 ping 전송(솔로)");
+        return;
+      }
       broadcastToPeers({ type: "ping", t: Date.now(), from: role });
       logTo(lobbyLog, "📤 ping 전송");
     };
@@ -407,11 +489,25 @@ function enterLobby() {
 function initLobbyUi() {
   lobbyInited = true;
 
+  buildZoneOptions(zoneSelect);
+  buildMissionOptions(missionSelect, zoneSelect?.value || "A");
+
+  if (zoneSelect) {
+    zoneSelect.addEventListener("change", () => {
+      buildMissionOptions(missionSelect, zoneSelect.value);
+      const stage = missionSelect?.value || "GEN-01";
+      if (missionDesc) missionDesc.textContent = MISSION_INFO[stage] || "";
+      renderPlayerList();
+      sendLobbyState();
+      updateStartButtonState();
+    });
+  }
+
   if (missionSelect && missionDesc) {
     const bootKey = missionSelect.value;
     missionDesc.textContent = MISSION_INFO[bootKey] || "";
     missionSelect.addEventListener("change", () => {
-      if (role !== "host") return;
+      if (role !== "host" && role !== "solo") return;
       const key = missionSelect.value;
       missionDesc.textContent = MISSION_INFO[key] || "";
       logTo(lobbyLog, `미션 변경: ${key}`);
@@ -485,13 +581,15 @@ function initLobbyUi() {
 
   if (btnStartGame) {
     btnStartGame.addEventListener("click", () => {
-      if (role !== "host") return;
+      if (role !== "host" && role !== "solo") return;
       if (btnStartGame.disabled) {
         logTo(lobbyLog, "모든 플레이어가 준비되어야 시작할 수 있어.");
         return;
       }
       const stage = missionSelect?.value || "GEN-01";
-      broadcastToPeers({ type: "start_game", payload: { stage } });
+      if (role !== "solo") {
+        broadcastToPeers({ type: "start_game", payload: { stage } });
+      }
       gotoIngame(stage);
     });
   }
@@ -549,7 +647,7 @@ function getLocalState() {
     id: localClientId,
     name: name || "Player",
     ready: lobbyReady,
-    isHost: role === "host",
+    isHost: role === "host" || role === "solo",
     role: activeRole?.dataset.role || "Assault",
     weapon: weaponSelect?.value || "rifle",
     gadget: gadgetSelect?.value || "turret",
@@ -563,6 +661,7 @@ function sendLobbyState() {
     broadcastSnapshot();
     return;
   }
+  if (role === "solo") return;
   if (!dataChannel || dataChannel.readyState !== "open") return;
   dataChannel.send(JSON.stringify({ type: "lobby_state", payload: getLocalState() }));
 }
@@ -603,6 +702,10 @@ function broadcastSnapshot() {
 function updateStartButtonState() {
   if (!btnStartGame) return;
   if (role !== "host") {
+    if (role === "solo") {
+      btnStartGame.disabled = !lobbyReady;
+      return;
+    }
     btnStartGame.disabled = true;
     return;
   }
@@ -630,13 +733,15 @@ function renderPlayerList() {
         equip: [],
       });
     }
+  } else if (role === "solo") {
+    players.push(localState);
   } else {
     if (remoteHostState) players.push(remoteHostState);
     const mergedPeers = remotePeers.filter((p) => p.id !== localClientId);
     players.push(localState, ...mergedPeers);
   }
 
-  if (role !== "host" && !remoteHostState) {
+  if (role !== "host" && role !== "solo" && !remoteHostState) {
     players.push({
       name: "호스트 대기중",
       ready: false,
@@ -699,5 +804,5 @@ if (btnBackToMenu) {
 function gotoIngame(stageKey) {
   const stage = stageKey || missionSelect?.value || "GEN-01";
   const url = `ingame/index.html?stage=${encodeURIComponent(stage)}`;
-  window.location.href = url;
+  window.open(url, "iao_ingame", "width=1280,height=720");
 }

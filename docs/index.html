@@ -39,16 +39,6 @@
           💡 지금은 <b>Offer/Answer 복붙</b> 방식으로 연결해. (서버 없이 P2P 연결)
         </div>
 
-        <div class="field">
-          <label>솔로 스테이지</label>
-          <select id="soloStage">
-            <option value="GEN-01">GEN-01: 발전기 가동</option>
-            <option value="COM-02">COM-02: 통신기 복구</option>
-            <option value="PUR-03">PUR-03: 정화기 재가동</option>
-            <option value="RES-04">RES-04: 선발대 구조</option>
-          </select>
-        </div>
-
         <div class="actionsRow">
           <button class="btn ghost" id="btnHow">연결 방법</button>
           <button class="btn" id="btnStartLocal">로컬 테스트(싱글)</button>
@@ -145,13 +135,12 @@
         <div class="card inner">
           <h3>미션 선택</h3>
           <div class="field">
-            <label>작전</label>
-            <select id="missionSelect">
-              <option value="GEN-01">GEN-01: 발전기 가동</option>
-              <option value="COM-02">COM-02: 통신기 복구</option>
-              <option value="PUR-03">PUR-03: 정화기 재가동</option>
-              <option value="RES-04">RES-04: 선발대 구조</option>
-            </select>
+            <label>구역</label>
+            <select id="zoneSelect"></select>
+          </div>
+          <div class="field">
+            <label>스테이지</label>
+            <select id="missionSelect"></select>
           </div>
           <div class="missionCard" id="missionDesc">
             발전기를 단계별로 가동하고 방어 라인을 유지해야 한다.
@@ -181,20 +170,32 @@
           <h3>역할 선택</h3>
           <div class="roleGrid" id="roleGrid">
             <button class="roleCard active" data-role="Assault">
-              <span class="roleTitle">Assault</span>
-              <span class="roleDesc">화력 중심, 기본 탄약 보너스</span>
+              <span class="roleTitle">
+                Assault
+                <span class="roleSkill">스킬: -</span>
+              </span>
+              <span class="roleDesc">패시브: 화력 중심, 기본 탄약 보너스</span>
             </button>
             <button class="roleCard" data-role="Engineer">
-              <span class="roleTitle">Engineer</span>
-              <span class="roleDesc">시설 수리 속도 증가</span>
+              <span class="roleTitle">
+                Engineer
+                <span class="roleSkill">스킬: -</span>
+              </span>
+              <span class="roleDesc">패시브: 시설 수리 속도 증가</span>
             </button>
             <button class="roleCard" data-role="Medic">
-              <span class="roleTitle">Medic</span>
-              <span class="roleDesc">회복 아이템 효율 증가</span>
+              <span class="roleTitle">
+                Medic
+                <span class="roleSkill">스킬: -</span>
+              </span>
+              <span class="roleDesc">패시브: 회복 아이템 효율 증가</span>
             </button>
             <button class="roleCard" data-role="Scout">
-              <span class="roleTitle">Scout</span>
-              <span class="roleDesc">이동 속도, 탐지 보너스</span>
+              <span class="roleTitle">
+                Scout
+                <span class="roleSkill">스킬: -</span>
+              </span>
+              <span class="roleDesc">패시브: 이동 속도, 탐지 보너스</span>
             </button>
           </div>
         </div>
