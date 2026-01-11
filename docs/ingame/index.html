@@ -9,6 +9,7 @@
 <body>
   <canvas id="gameCanvas"></canvas>
   <canvas id="visionGL"></canvas>
+  <canvas id="aimCanvas"></canvas>
   <canvas id="miniMap" class="miniMap" width="180" height="140"></canvas>
   <button class="menuBtn" id="btnExitToMenu">메뉴로</button>
   <div class="hud" id="hud">
@@ -26,12 +27,66 @@
       </div>
       <span class="hudValue" id="stamValue">100/100</span>
     </div>
-    <div class="hudItem">
-      <span class="hudLabel">Ammo</span>
-      <div class="hudBar">
-        <div class="hudFill ammo" id="ammoFill"></div>
+  </div>
+  <div class="inventory" id="inventory">
+    <div class="inventoryHeader">Inventory</div>
+    <div class="inventorySlots">
+      <div class="invSlot active">
+        <div class="invSlotTag">주무기</div>
+        <div class="invBody">
+          <div class="invArt">
+            <svg viewBox="0 0 240 120" aria-hidden="true">
+              <defs>
+                <linearGradient id="rifleGrad" x1="0" x2="1">
+                  <stop offset="0" stop-color="#1b2a44"/>
+                  <stop offset="1" stop-color="#0f1828"/>
+                </linearGradient>
+              </defs>
+              <rect x="18" y="52" width="160" height="16" rx="6" fill="url(#rifleGrad)"/>
+              <rect x="170" y="55" width="40" height="10" rx="4" fill="#142033"/>
+              <rect x="44" y="44" width="26" height="6" rx="3" fill="#22324b"/>
+              <rect x="78" y="64" width="36" height="10" rx="4" fill="#1a2840"/>
+              <rect x="114" y="68" width="12" height="22" rx="4" fill="#202d46"/>
+            </svg>
+          </div>
+          <div class="invInfo">
+            <div class="invItem">Rifle</div>
+            <div class="invMeta">탄약 25/30</div>
+          </div>
+        </div>
       </div>
-      <span class="hudValue" id="ammoValue">30/30</span>
+      <div class="invSlot">
+        <div class="invSlotTag">보조무기</div>
+        <div class="invBody">
+          <div class="invArt">
+            <svg viewBox="0 0 240 120" aria-hidden="true">
+              <rect x="36" y="58" width="92" height="12" rx="5" fill="#1a253a"/>
+              <rect x="128" y="60" width="24" height="8" rx="4" fill="#202c44"/>
+              <rect x="64" y="50" width="16" height="5" rx="2.5" fill="#2b3b55"/>
+            </svg>
+          </div>
+          <div class="invInfo">
+            <div class="invItem">Pistol</div>
+            <div class="invMeta">탄약 12/12</div>
+          </div>
+        </div>
+      </div>
+      <div class="invSlot">
+        <div class="invSlotTag">특수장비</div>
+        <div class="invBody">
+          <div class="invArt">
+            <svg viewBox="0 0 240 120" aria-hidden="true">
+              <rect x="88" y="28" width="64" height="36" rx="6" fill="#1b263c"/>
+              <rect x="72" y="66" width="96" height="10" rx="5" fill="#24324a"/>
+              <rect x="108" y="76" width="24" height="26" rx="5" fill="#1a263c"/>
+            </svg>
+          </div>
+          <div class="invInfo">
+            <div class="invItem">Turret</div>
+            <div class="invMeta">사용 2/3</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

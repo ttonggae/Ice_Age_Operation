@@ -6,6 +6,7 @@ body{background:#060b15;}
   width:100vw;
   height:100vh;
   background:rgba(8,12,20,.95);
+  cursor:none;
 }
 #visionGL{
   position:fixed;
@@ -15,6 +16,17 @@ body{background:#060b15;}
   height:100vh;
   pointer-events:none;
   z-index:8;
+  cursor:none;
+}
+#aimCanvas{
+  position:fixed;
+  left:0;
+  top:0;
+  width:100vw;
+  height:100vh;
+  pointer-events:none;
+  z-index:13;
+  cursor:none;
 }
 .miniMap{
   position:fixed;
@@ -23,8 +35,11 @@ body{background:#060b15;}
   width:180px;
   height:140px;
   border-radius:10px;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(6,10,18,.85);
+  border:2px solid rgba(120,200,255,.8);
+  background:rgba(8,14,26,.85);
+  box-shadow:
+    0 0 18px rgba(120,200,255,.5),
+    inset 0 0 12px rgba(120,200,255,.3);
   z-index:12;
 }
 .menuBtn{
@@ -59,9 +74,26 @@ body{background:#060b15;}
   gap:10px;
   padding:8px 10px;
   border-radius:12px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(9,14,24,.75);
+  border:2px solid rgba(140,255,200,.75);
+  background:rgba(16,26,44,.88);
+  box-shadow:
+    0 0 16px rgba(140,255,200,.35),
+    inset 0 0 10px rgba(140,255,200,.2);
   min-width:220px;
+}
+.hudLabel{
+  color:#92a5c6;
+  font-size:11px;
+}
+.hudValue{
+  color:#e8f6ff;
+  font-weight:600;
+}
+.hudFill{
+  background:linear-gradient(90deg, #5bff9a, #a8ffd0);
+}
+.hudFill.stamina{
+  background:linear-gradient(90deg, #5bffb0, #a8ffe0);
 }
 .hudLabel{
   width:44px;
@@ -92,4 +124,176 @@ body{background:#060b15;}
   min-width:64px;
   text-align:right;
   color:#e9f0ff;
+}
+.inventory{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  width:240px;
+  z-index:12;
+  border:2px solid rgba(140,255,200,.8);
+  background:rgba(16,26,44,.88);
+  box-shadow:
+    0 0 16px rgba(140,255,200,.35),
+    inset 0 0 10px rgba(140,255,200,.2);
+  border-radius:10px;
+  color:#e9f0ff;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+  font-size:12px;
+}
+.inventoryHeader{
+  padding:8px 12px 4px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:#e9fff3;
+  font-size:11px;
+}
+.inventorySlots{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:4px 12px 10px;
+}
+.invSlot{
+  border:2px solid rgba(140,255,200,.55);
+  box-shadow:0 0 10px rgba(140,255,200,.2);
+  background:rgba(18,28,48,.82);
+  border-radius:6px;
+  padding:4px 10px 4px;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  position:relative;
+  transition:transform .15s ease, opacity .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.invBody{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.invArt{
+  width:186px;
+  height:76px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:linear-gradient(180deg, rgba(14,20,34,.9), rgba(10,16,26,.9));
+}
+.invArt svg{
+  width:176px;
+  height:68px;
+}
+.invInfo{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.invSlot.active{
+  transform:scale(1.02);
+  border-color:rgba(150,255,210,.9);
+  box-shadow:
+    0 0 16px rgba(140,255,200,.45),
+    0 8px 22px rgba(30,160,90,.25);
+}
+.invSlot.active .invBody{
+  align-items:center;
+  justify-content:center;
+  min-height:56px;
+}
+.invSlot.active .invInfo{
+  align-items:flex-start;
+  text-align:left;
+}
+.invSlot.active .invItem{
+  position:absolute;
+  left:10px;
+  top:6px;
+  font-size:12px;
+  color:#f4fff8;
+}
+.invSlot.active .invMeta{
+  position:absolute;
+  left:10px;
+  bottom:6px;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.02em;
+  color:#f4fff8;
+}
+.invSlot:not(.active){
+  opacity:.6;
+  transform:scale(.86);
+}
+.invSlot:not(.active) .invBody{
+  flex-direction:row;
+  justify-content:flex-start;
+  align-items:center;
+}
+.invSlot:not(.active) .invInfo{
+  align-items:flex-start;
+  text-align:left;
+}
+.invLabel{
+  color:#7f8aa3;
+  font-size:11px;
+  letter-spacing:.08em;
+}
+.invSlotTag{
+  position:absolute;
+  top:6px;
+  right:8px;
+  padding:2px 6px;
+  border-radius:999px;
+  font-size:10px;
+  letter-spacing:.06em;
+  color:#f2fff7;
+  background:rgba(26,40,60,.9);
+  border:1px solid rgba(140,255,200,.6);
+}
+.invItem{
+  color:#f4fff8;
+  font-weight:600;
+  font-size:12px;
+}
+.invMeta{
+  color:#d9ffe8;
+  font-size:11px;
+}
+.inventorySlots{
+  position:relative;
+}
+.invSlot:not(.active){
+  margin-top:-4px;
+  margin-left:22px;
+  z-index:0;
+}
+.invSlot:not(.active) .invItem,
+.invSlot:not(.active) .invMeta,
+.invSlot:not(.active) .invArt,
+.invSlot:not(.active) .invSlotTag{
+  display:none;
+}
+.invSlot:not(.active) .invMeta{
+  display:none;
+}
+.invSlot:not(.active) .invItem{
+  display:block;
+}
+.invSlot:not(.active) .invSlotTag{
+  display:block;
+  position:absolute;
+  top:6px;
+  right:8px;
+  border:none;
+  background:transparent;
+  color:#7f8aa3;
+  padding:0;
+}
+.invSlot:not(.active){
+  padding:6px 10px;
+  background:rgba(12,18,30,.6);
+}
+.invSlot.active{
+  z-index:2;
 }

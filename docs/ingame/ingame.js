@@ -7,6 +7,8 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas ? canvas.getContext("2d") : null;
 const visionGLCanvas = document.getElementById("visionGL");
 const visionGL = visionGLCanvas ? visionGLCanvas.getContext("webgl", { premultipliedAlpha: false }) : null;
+const aimCanvas = document.getElementById("aimCanvas");
+const aimCtx = aimCanvas ? aimCanvas.getContext("2d") : null;
 const miniMap = document.getElementById("miniMap");
 const miniCtx = miniMap ? miniMap.getContext("2d") : null;
 const btnExitToMenu = document.getElementById("btnExitToMenu");
@@ -14,6 +16,13 @@ const visionMaskCanvas = document.createElement("canvas");
 const visionMaskCtx = visionMaskCanvas.getContext("2d");
 const ingameChannel = new BroadcastChannel("iao_ingame");
 const clientId = sessionStorage.getItem("iaoClientId") || Math.random().toString(36).slice(2, 10);
+const inventorySlots = Array.from(document.querySelectorAll(".inventory .invSlot"));
+const inventoryItems = [
+  { type: "main", name: "Rifle", ammo: 25, maxAmmo: 30, uses: null, spreadDeg: 3, lifeSec: 2.2 },
+  { type: "side", name: "Pistol", ammo: 12, maxAmmo: 12, uses: null, spreadDeg: 8, lifeSec: 1.5 },
+  { type: "gear", name: "Turret", ammo: null, maxAmmo: null, uses: { cur: 2, max: 3 }, spreadDeg: 0, lifeSec: 0.8 },
+];
+let activeSlotIndex = 0;
 let visionProgram = null;
 let visionBuffer = null;
 let visionTexture = null;
@@ -26,6 +35,7 @@ const input = {
   right: false,
   sprint: false,
   shooting: false,
+  aiming: false,
   mouseX: 0,
   mouseY: 0,
 };
@@ -47,7 +57,7 @@ const player = {
 const bullets = [];
 const otherPlayers = [];
 const BULLET_SPEED = 520;
-const BULLET_LIFE = 0.9;
+const BULLET_LIFE = 1.8;
 let lastShot = 0;
 const SHOT_COOLDOWN = 0.12;
 
@@ -69,8 +79,6 @@ const hud = {
   hpValue: document.getElementById("hpValue"),
   stamFill: document.getElementById("stamFill"),
   stamValue: document.getElementById("stamValue"),
-  ammoFill: document.getElementById("ammoFill"),
-  ammoValue: document.getElementById("ammoValue"),
 };
 
 const RUN_MULT = 1.6;
@@ -101,6 +109,13 @@ function resizeCanvas() {
     visionGLCanvas.height = Math.round(viewHeight * window.devicePixelRatio);
     visionGLCanvas.style.width = `${viewWidth}px`;
     visionGLCanvas.style.height = `${viewHeight}px`;
+  }
+  if (aimCanvas && aimCtx) {
+    aimCanvas.width = Math.round(viewWidth * window.devicePixelRatio);
+    aimCanvas.height = Math.round(viewHeight * window.devicePixelRatio);
+    aimCanvas.style.width = `${viewWidth}px`;
+    aimCanvas.style.height = `${viewHeight}px`;
+    aimCtx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
   }
   if (visionGL) {
     visionGL.viewport(0, 0, visionGLCanvas.width, visionGLCanvas.height);
@@ -163,15 +178,19 @@ function tryShoot(now) {
   const targetY = camera.y + input.mouseY;
   const dx = targetX - player.x;
   const dy = targetY - player.y;
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
+  const baseAngle = Math.atan2(dy, dx);
+  const spreadRad = getActiveSpreadRad();
+  const spreadOffset = (Math.random() * 2 - 1) * spreadRad;
+  const shotAngle = baseAngle + spreadOffset;
+  const ux = Math.cos(shotAngle);
+  const uy = Math.sin(shotAngle);
+  const life = getActiveBulletLife();
   bullets.push({
     x: player.x + ux * (player.r + 4),
     y: player.y + uy * (player.r + 4),
     vx: ux * BULLET_SPEED,
     vy: uy * BULLET_SPEED,
-    life: BULLET_LIFE,
+    life,
   });
 }
 
@@ -188,12 +207,22 @@ function updateBullets(dt) {
 }
 
 function updateHud() {
+  syncInventoryUi();
   if (hud.hpFill) hud.hpFill.style.width = `${(player.hp / player.maxHp) * 100}%`;
   if (hud.hpValue) hud.hpValue.textContent = `${Math.round(player.hp)}/${player.maxHp}`;
   if (hud.stamFill) hud.stamFill.style.width = `${(player.stamina / player.maxStamina) * 100}%`;
   if (hud.stamValue) hud.stamValue.textContent = `${Math.round(player.stamina)}/${player.maxStamina}`;
-  if (hud.ammoFill) hud.ammoFill.style.width = `${(player.ammo / player.maxAmmo) * 100}%`;
-  if (hud.ammoValue) hud.ammoValue.textContent = `${player.ammo}/${player.maxAmmo}`;
+}
+
+function getActiveSpreadRad() {
+  const slot = inventoryItems[activeSlotIndex];
+  const spreadDeg = slot?.spreadDeg ?? 0;
+  return (spreadDeg * Math.PI) / 180;
+}
+
+function getActiveBulletLife() {
+  const slot = inventoryItems[activeSlotIndex];
+  return slot?.lifeSec ?? BULLET_LIFE;
 }
 
 function draw() {
@@ -239,8 +268,10 @@ function draw() {
   });
   ctx.restore();
 
+  drawAimAssist();
   drawVisionCone();
   drawMiniMap();
+  drawAimAssist();
 
   if (blizzardFade > 0.01) {
     ctx.save();
@@ -283,6 +314,9 @@ function bindInput() {
     if (e.code === "Space" && !document.fullscreenElement) {
       requestFullscreen();
     }
+    if (e.code === "Digit1") setActiveSlot(0);
+    if (e.code === "Digit2") setActiveSlot(1);
+    if (e.code === "Digit3") setActiveSlot(2);
   });
   window.addEventListener("keyup", (e) => {
     if (e.key === "w" || e.key === "W") input.up = false;
@@ -297,15 +331,147 @@ function bindInput() {
     input.mouseX = ((e.clientX - rect.left) / rect.width) * viewWidth;
     input.mouseY = ((e.clientY - rect.top) / rect.height) * viewHeight;
   });
-  canvas.addEventListener("mousedown", () => {
-    input.shooting = true;
+  canvas.addEventListener("mousedown", (e) => {
+    if (e.button === 0) input.shooting = true;
+    if (e.button === 2) input.aiming = true;
   });
-  window.addEventListener("mouseup", () => {
-    input.shooting = false;
+  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+  window.addEventListener("mouseup", (e) => {
+    if (e.button === 0) input.shooting = false;
+    if (e.button === 2) input.aiming = false;
   });
 
   window.addEventListener("resize", () => {
     resizeCanvas();
+  });
+}
+
+function drawAimAssist() {
+  if (!aimCtx) return;
+  aimCtx.clearRect(0, 0, viewWidth, viewHeight);
+  const startX = player.x;
+  const startY = player.y;
+  const targetX = camera.x + input.mouseX;
+  const targetY = camera.y + input.mouseY;
+  const dx = targetX - startX;
+  const dy = targetY - startY;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const offset = player.r + 8;
+  const laserStartX = startX + ux * offset;
+  const laserStartY = startY + uy * offset;
+  const maxDist = BULLET_SPEED * getActiveBulletLife();
+  const wallHit = getLaserHit(laserStartX, laserStartY, ux, uy, maxDist);
+  const crossDist = Math.min(maxDist, Math.max(0, len - 18));
+  const wallDist = Math.hypot(wallHit.x - laserStartX, wallHit.y - laserStartY);
+  const finalDist = Math.min(crossDist, wallDist);
+  const endX = laserStartX + ux * finalDist;
+  const endY = laserStartY + uy * finalDist;
+
+  if (input.aiming) {
+    const sx = laserStartX - camera.x;
+    const sy = laserStartY - camera.y;
+    const ex = endX - camera.x;
+    const ey = endY - camera.y;
+    aimCtx.save();
+    aimCtx.shadowColor = "rgba(255,80,80,0.9)";
+    aimCtx.shadowBlur = 12;
+    aimCtx.strokeStyle = "rgba(255,80,80,0.7)";
+    aimCtx.lineWidth = 2.4;
+    aimCtx.beginPath();
+    aimCtx.moveTo(sx, sy);
+    aimCtx.lineTo(ex, ey);
+    aimCtx.stroke();
+    aimCtx.shadowBlur = 0;
+    aimCtx.strokeStyle = "rgba(255,140,140,0.95)";
+    aimCtx.lineWidth = 1.2;
+    aimCtx.beginPath();
+    aimCtx.moveTo(sx, sy);
+    aimCtx.lineTo(ex, ey);
+    aimCtx.stroke();
+    aimCtx.restore();
+  }
+
+  const cx = input.mouseX;
+  const cy = input.mouseY;
+  aimCtx.save();
+  aimCtx.shadowColor = "rgba(80,200,255,0.9)";
+  aimCtx.shadowBlur = 10;
+  aimCtx.strokeStyle = "rgba(110,220,255,0.85)";
+  aimCtx.lineWidth = 2;
+  aimCtx.beginPath();
+  aimCtx.moveTo(cx - 10, cy);
+  aimCtx.lineTo(cx - 3, cy);
+  aimCtx.moveTo(cx + 3, cy);
+  aimCtx.lineTo(cx + 10, cy);
+  aimCtx.moveTo(cx, cy - 10);
+  aimCtx.lineTo(cx, cy - 3);
+  aimCtx.moveTo(cx, cy + 3);
+  aimCtx.lineTo(cx, cy + 10);
+  aimCtx.stroke();
+  aimCtx.shadowBlur = 0;
+  aimCtx.strokeStyle = "rgba(200,245,255,0.95)";
+  aimCtx.lineWidth = 1;
+  aimCtx.beginPath();
+  aimCtx.moveTo(cx - 8, cy);
+  aimCtx.lineTo(cx - 3, cy);
+  aimCtx.moveTo(cx + 3, cy);
+  aimCtx.lineTo(cx + 8, cy);
+  aimCtx.moveTo(cx, cy - 8);
+  aimCtx.lineTo(cx, cy - 3);
+  aimCtx.moveTo(cx, cy + 3);
+  aimCtx.lineTo(cx, cy + 8);
+  aimCtx.stroke();
+  aimCtx.restore();
+}
+
+function getLaserHit(sx, sy, ux, uy, maxDist) {
+  const step = 12;
+  let dist = 0;
+  while (dist < maxDist) {
+    const nx = sx + ux * dist;
+    const ny = sy + uy * dist;
+    if (isWallAt(nx, ny)) {
+      return { x: nx, y: ny };
+    }
+    dist += step;
+  }
+  return { x: sx + ux * maxDist, y: sy + uy * maxDist };
+}
+
+function setActiveSlot(index) {
+  if (!inventorySlots.length) return;
+  if (index < 0 || index >= inventorySlots.length) return;
+  activeSlotIndex = index;
+  inventorySlots.forEach((slot, i) => {
+    slot.classList.toggle("active", i === index);
+  });
+  const slot = inventoryItems[index];
+  if (slot?.ammo != null) {
+    player.maxAmmo = slot.maxAmmo;
+    player.ammo = slot.ammo;
+  }
+  syncInventoryUi();
+}
+
+function syncInventoryUi() {
+  if (!inventorySlots.length) return;
+  inventorySlots.forEach((slot, i) => {
+    const itemEl = slot.querySelector(".invItem");
+    const metaEl = slot.querySelector(".invMeta");
+    const item = inventoryItems[i];
+    if (!item) return;
+    if (itemEl) itemEl.textContent = item.name;
+    if (metaEl) {
+      if (item.ammo != null) {
+        metaEl.textContent = `${item.ammo}/${item.maxAmmo}`;
+      } else if (item.uses) {
+        metaEl.textContent = `${item.uses.cur}/${item.uses.max}`;
+      } else {
+        metaEl.textContent = "-";
+      }
+    }
   });
 }
 
